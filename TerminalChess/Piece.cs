@@ -38,7 +38,7 @@ namespace TerminalChess
         public int MoveCount { get; set; }
         public abstract char PieceChar { get;}
 
-        public abstract bool IsValidMove(
+        public abstract bool? IsValidMove(
             Move move,
             Piece[,] board);
 
@@ -51,7 +51,7 @@ namespace TerminalChess
         {
             IsWhite = whiteOrNot;
         }
-        public override bool IsValidMove(Move move, Piece[,] board)
+        public override bool? IsValidMove(Move move, Piece[,] board)
         {
             int direction = IsWhite ? -1 : 1;
             int dy = move.To.Y - move.From.Y;
@@ -68,8 +68,18 @@ namespace TerminalChess
                 if (dy != direction)
                     return false;
                 if (targetSquare == null)
-                    return false;
-                if (targetSquare.IsWhite == IsWhite)
+                {
+                    if (board[move.To.Y - direction, move.To.X] == null)
+                        return false;
+                    if (board[move.To.Y - direction, move.To.X].MoveCount != 1)
+                        return false;
+                    if (board[move.To.Y - direction, move.To.X] is not Pawn || board[move.To.Y - direction, move.To.X].IsWhite == IsWhite)
+                        return false;
+
+                    return null;
+                }
+                else
+                    if (targetSquare.IsWhite == IsWhite)
                     return false;
             }
             else
@@ -102,7 +112,7 @@ namespace TerminalChess
         {
             IsWhite = whiteOrNot;
         }
-        public override bool IsValidMove(Move move, Piece[,] board)
+        public override bool? IsValidMove(Move move, Piece[,] board)
         {
             int dy = Math.Abs(move.To.Y - move.From.Y);
             int dx = Math.Abs(move.To.X - move.From.X);
@@ -129,7 +139,7 @@ namespace TerminalChess
         {
             IsWhite = whiteOrNot;
         }
-        public override bool IsValidMove(Move move, Piece[,] board)
+        public override bool? IsValidMove(Move move, Piece[,] board)
         {
             int dy = Math.Abs(move.To.Y - move.From.Y);
             int dx = Math.Abs(move.To.X - move.From.X);
@@ -169,7 +179,7 @@ namespace TerminalChess
         {
             IsWhite = whiteOrNot;
         }
-        public override bool IsValidMove(Move move, Piece[,] board)
+        public override bool? IsValidMove(Move move, Piece[,] board)
         {
             int dy = Math.Abs(move.To.Y - move.From.Y);
             int dx = Math.Abs(move.To.X - move.From.X);
@@ -227,7 +237,7 @@ namespace TerminalChess
         {
             IsWhite = whiteOrNot;
         }
-        public override bool IsValidMove(Move move, Piece[,] board)
+        public override bool? IsValidMove(Move move, Piece[,] board)
         {
             int dy = Math.Abs(move.To.Y - move.From.Y);
             int dx = Math.Abs(move.To.X - move.From.X);
@@ -305,7 +315,7 @@ namespace TerminalChess
         {
             IsWhite = whiteOrNot;
         }
-        public override bool IsValidMove(Move move, Piece[,] board)
+        public override bool? IsValidMove(Move move, Piece[,] board)
         {
             int dy = Math.Abs(move.To.Y - move.From.Y);
             int dx = Math.Abs(move.To.X - move.From.X);

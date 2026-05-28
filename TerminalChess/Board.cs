@@ -25,17 +25,17 @@ namespace TerminalChess
             char file = 'a';
             Console.Clear();
 
-            Console.Write("\n-------------------\n");
-            Console.Write("   ");
+            Console.Write("\n------------------\n");
+            Console.Write("  ");
             for (int f = 0; f < 8; f++)
             {
                 Console.Write($"{file++}|");
             }
-            Console.Write("\n-------------------\n");
+            Console.Write("\n------------------\n");
 
             for (int i = 0; i < 8; i++)
             {
-                Console.Write($"{rank--} ");
+                Console.Write($"{rank--}");
 
                 for (int j = 0; j < 8; j++)
                 {
@@ -49,16 +49,16 @@ namespace TerminalChess
                         Console.Write($"{BoardArr[i, j].PieceChar}|");
                     }
                 }
-                Console.Write("\n-------------------\n");
+                Console.Write("\n------------------\n");
             }
 
             file = 'a';
-            Console.Write("   ");
+            Console.Write("  ");
             for (int f = 0; f < 8; f++)
             {
                 Console.Write($"{file++}|");
             }
-            Console.Write("\n-------------------\n");
+            Console.Write("\n------------------\n");
         }
 
         public void ShowBlackBoard()
@@ -67,17 +67,17 @@ namespace TerminalChess
             char file = 'h';
             Console.Clear();
 
-            Console.Write("\n-------------------\n");
-            Console.Write("   ");
+            Console.Write("\n------------------\n");
+            Console.Write("  ");
             for (int f = 0; f < 8; f++)
             {
                 Console.Write($"{file--}|");
             }
-            Console.Write("\n-------------------\n");
+            Console.Write("\n------------------\n");
 
             for (int i = 7; i >= 0; i--)
             {
-                Console.Write($"{rank++} ");
+                Console.Write($"{rank++}");
                 for (int j = 7; j >= 0; j--)
                 {
                     if (j == 7)
@@ -90,30 +90,38 @@ namespace TerminalChess
                         Console.Write($"{BoardArr[i, j].PieceChar}|");
                     }
                 }
-                Console.Write("\n-------------------\n");
+                Console.Write("\n------------------\n");
             }
 
             file = 'h';
-            Console.Write("   ");
+            Console.Write("  ");
             for (int f = 0; f < 8; f++)
             {
                 Console.Write($"{file--}|");
             }
-            Console.Write("\n-------------------\n");
+            Console.Write("\n------------------\n");
         }
 
-        public bool ApplyMove(Move move, bool whiteOrNot)
+        public bool ApplyMove(Move move, bool white)
         {
             Position? kingPos;
             Piece? movingPiece = BoardArr[move.From.Y, move.From.X];
             Piece? temp = BoardArr[move.To.Y, move.To.X];
+            int direction = white ? -1 : 1;
+            bool EnPassant = false;
 
             if (movingPiece == null)
                 return false;
-            if (movingPiece.IsWhite != whiteOrNot)
+            if (movingPiece.IsWhite != white)
                 return false;
-            if (!movingPiece.IsValidMove(move, BoardArr))
+            if (movingPiece.IsValidMove(move, BoardArr) == false)
                 return false;
+            if (movingPiece.IsValidMove(move, BoardArr) == null)
+            {
+                EnPassant = true;
+                temp = BoardArr[move.To.Y - direction, move.To.X];
+                BoardArr[move.To.Y - direction, move.To.X] = null;
+            }
 
             BoardArr[move.To.Y, move.To.X] = movingPiece;
             BoardArr[move.From.Y, move.From.X] = null;
@@ -126,8 +134,12 @@ namespace TerminalChess
             if (IsKingInCheck(kingPos, BoardArr[move.To.Y, move.To.X].IsWhite, BoardArr))
             {
                 BoardArr[move.From.Y, move.From.X] = BoardArr[move.To.Y, move.To.X];
-                BoardArr[move.To.Y, move.To.X] = temp;
+                if (EnPassant)
+                {
+                    BoardArr[move.To.Y - direction, move.To.X] = temp;
+                }
 
+                BoardArr[move.To.Y, move.To.X] = temp;
                 return false;
             }
 
@@ -135,11 +147,11 @@ namespace TerminalChess
             return true;
         }
 
-        public bool IsItMate(bool whiteOrNot)
+        public bool IsItMate(bool white)
         {
-            Position? kingPos = FindKing(whiteOrNot, BoardArr);
+            Position? kingPos = FindKing(white, BoardArr);
 
-            if (!IsKingInCheck(kingPos, whiteOrNot, BoardArr))
+            if (!IsKingInCheck(kingPos, white, BoardArr))
                 return false;
 
             for (int fromY = 0; fromY < 8; fromY++)
@@ -150,7 +162,7 @@ namespace TerminalChess
 
                     if (piece == null)
                         continue;
-                    if (piece.IsWhite != whiteOrNot)
+                    if (piece.IsWhite != white)
                         continue;
 
                     for (int toY = 0; toY < 8; toY++)
@@ -162,7 +174,7 @@ namespace TerminalChess
                                 new Position(toX, toY)
                             );
 
-                            if (CanMove(move))
+                            if (CanMove(move, white))
                                 return false;
                         }
                     }
@@ -172,7 +184,7 @@ namespace TerminalChess
             return true;
         }
 
-        public bool CanMove(Move move)
+        public bool CanMove(Move move, bool white)
         {
             Piece?[,] copyBoard = new Piece[8, 8];
 
@@ -187,9 +199,16 @@ namespace TerminalChess
             Piece movingPiece = copyBoard[move.From.Y, move.From.X];
             Piece temp = copyBoard[move.To.Y, move.To.X];
             Position kingPos;
+            bool EnPassant = false;
+            int direction = white ? -1 : 1;
 
-            if (!movingPiece.IsValidMove(move, copyBoard))
+            if (movingPiece.IsValidMove(move, copyBoard) == false)
                 return false;
+            if (movingPiece.IsValidMove(move, copyBoard) == null) {
+                EnPassant = true;
+                temp = copyBoard[move.To.Y - direction, move.To.X];
+                copyBoard[move.To.Y - direction, move.To.X] = null;
+            }
 
             copyBoard[move.To.Y, move.To.X] = movingPiece;
             copyBoard[move.From.Y, move.From.X] = null;
@@ -201,7 +220,12 @@ namespace TerminalChess
             if (IsKingInCheck(kingPos, movingPiece.IsWhite, copyBoard))
             {
                 copyBoard[move.From.Y, move.From.X] = copyBoard[move.To.Y, move.To.X];
-                copyBoard[move.To.Y, move.To.X] = temp;
+                if (EnPassant)
+                {
+                    copyBoard[move.To.Y - direction, move.To.X] = temp;
+                }
+                else
+                    copyBoard[move.To.Y, move.To.X] = temp;
                 return false;
             }
 
@@ -241,13 +265,107 @@ namespace TerminalChess
                         continue;
                     move = new Move(new Position(j, i), position);
 
-                    if (board[i, j].IsValidMove(move, board))
+                    if (board[i, j].IsValidMove(move, board) == true || board[i, j].IsValidMove(move, board) == null)
                         return true;
                 }
             }
 
 
             return false;
+        }
+
+        public bool Castle(string input, bool white)
+        {
+            int y = white ? 7 : 0;
+            if (input.Equals("O-O"))
+            {
+                var king = BoardArr[y, 4];
+                var rook = BoardArr[y, 7];
+
+                if (king is not King || rook is not Rook)
+                    return false;
+                if (king.IsWhite != white || rook.IsWhite != white)
+                    return false;
+                if (king.MoveCount != 0 || rook.MoveCount != 0)
+                    return false;
+
+                if (BoardArr[y, 5] != null || BoardArr[y, 6] != null)
+                    return false;
+
+                if (IsKingInCheck(new Position(4, y), white, BoardArr))
+                    return false;
+
+                Piece?[,] copyBoard = new Piece?[8, 8];
+                for (int i = 0; i < 8; i++)
+                {
+                    for (int j = 0; j < 8; j++)
+                    {
+                        copyBoard[j, i] = BoardArr[j, i];
+                    }
+                }
+
+                copyBoard[y, 4] = null;
+                copyBoard[y, 5] = king;
+                if (IsKingInCheck(new Position(5, y), white, BoardArr))
+                    return false;
+
+                copyBoard[y, 5] = null;
+                copyBoard[y, 6] = king;
+                if (IsKingInCheck(new Position(6, y), white, BoardArr))
+                    return false;
+
+                BoardArr[y, 4] = null;
+                BoardArr[y, 5] = rook;
+                BoardArr[y, 6] = king;
+                BoardArr[y, 7] = null;
+            }
+            else if (input.Equals("O-O-O"))
+            {
+                var king = BoardArr[y, 4];
+                var rook = BoardArr[y, 0];
+
+                if (king is not King || rook is not Rook)
+                    return false;
+                if (king.IsWhite != white || rook.IsWhite != white)
+                    return false;
+                if (king.MoveCount != 0 || rook.MoveCount != 0)
+                    return false;
+
+                if (BoardArr[y, 3] != null || BoardArr[y, 2] != null || BoardArr[y, 1] != null)
+                    return false;
+
+                if (IsKingInCheck(new Position(4, y), white, BoardArr))
+                    return false;
+
+                Piece?[,] copyBoard = new Piece?[8, 8];
+                for (int i = 0; i < 8; i++)
+                {
+                    for (int j = 0; j < 8; j++)
+                    {
+                        copyBoard[j, i] = BoardArr[j, i];
+                    }
+                }
+
+                copyBoard[y, 4] = null;
+                copyBoard[y, 3] = king;
+                if (IsKingInCheck(new Position(3, y), white, BoardArr))
+                    return false;
+
+                copyBoard[y, 3] = null;
+                copyBoard[y, 2] = king;
+                if (IsKingInCheck(new Position(2, y), white, BoardArr))
+                    return false;
+
+                BoardArr[y, 4] = null;
+                BoardArr[y, 3] = rook;
+                BoardArr[y, 2] = king;
+                BoardArr[y, 1] = null;
+                BoardArr[y, 0] = null;
+            }
+            else
+                return false;
+
+            return true;
         }
     }
 }

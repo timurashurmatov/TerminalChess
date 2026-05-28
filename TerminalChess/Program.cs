@@ -27,9 +27,16 @@ class Program
             }
 
             string input = Console.ReadLine();
+
             if (String.IsNullOrWhiteSpace(input))
             {
                 ErrorMessage();
+                continue;
+            }
+
+            if (board.Castle(input, IsWhite))
+            {
+                moveCount++;
                 continue;
             }
 
